@@ -25,6 +25,8 @@ class Sentence2Graph
   def generate_link_array(str)
     # {あ=>["い", "う"], か=>["き", "く"]}みたいなやつ
     words = parse_sentence_to_array(str)
+    words.unshift("START")
+    words.push("END")
     from_to_array = {}
     len = words.length
     words.each_with_index do |word, index|
@@ -43,18 +45,27 @@ class Sentence2Graph
 
   def generate_graph_from_sentence(str, filename=:graph, filetype=:png)
     words = parse_sentence_to_array(str)
-    links generate_link_array(str)
+    links = generate_link_array(str)
     len = words.length
+    edge_style = ["bold", "solid", "dashed", "dotted"]
     self.gv.graph do
-      global layout:'neato', overlap:false
-      words.each_with_index do |word, index|
-        if index==len-1
-          break
+      global layout:'dot', overlap:false, splines:true
+      links.each do |from, ar|
+        node make_sym(from), label: from, fontsize: 20*(ar.uniq.length/2+1)
+        ar.uniq.each_with_index do |to, index|
+          route make_sym(from) => make_sym(to)
+          edge (make_sym(from).to_s+"_"+make_sym(to).to_s).to_sym, style: edge_style[index]
+          node make_sym(to), label: to
         end
-        route make_sym(word) => make_sym(words[index+1])
-        node make_sym(word), label: word
       end
-      node make_sym(words.last), label: words.last
+      # words.each_with_index do |word, index|
+      #   if index==len-1
+      #     break
+      #   end
+      #   route make_sym(word) => make_sym(words[index+1])
+      #   node make_sym(word), label: word
+      # end
+      # node make_sym(words.last), label: words.last
     end
     self.gv.save(filename, filetype)
   end
