@@ -43,18 +43,19 @@ class Sentence2Graph
     from_to_array
   end
 
-  def generate_graph_from_sentence(str, filename=:graph, filetype=:png)
+  def generate_graph_from_sentence(str, filename=:graph, filetype=:png, layout="dot")
     words = parse_sentence_to_array(str)
     links = generate_link_array(str)
     len = words.length
     edge_style = ["bold", "solid", "dashed", "dotted"]
+
     self.gv.graph do
-      global layout:'dot', overlap:false, splines:true
+      global layout: layout, overlap:false, splines:true
       links.each do |from, ar|
-        node make_sym(from), label: from, fontsize: 20*(ar.uniq.length/2+1)
+        node make_sym(from), label: from, fontsize: 20*(ar.length/2+1)
         ar.uniq.each_with_index do |to, index|
           route make_sym(from) => make_sym(to)
-          edge (make_sym(from).to_s+"_"+make_sym(to).to_s).to_sym, style: edge_style[index]
+          edge (make_sym(from).to_s+"_"+make_sym(to).to_s).to_sym, style: edge_style[index%4]
           node make_sym(to), label: to
         end
       end
@@ -70,7 +71,6 @@ class Sentence2Graph
     self.gv.save(filename, filetype)
   end
 end
-
 
 def make_sym(str)
   str.to_s.split("").map(&:ord).join.to_sym
